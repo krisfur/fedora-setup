@@ -25,3 +25,12 @@ sudo dnf install nodejs -y
 # neovim
 sudo dnf install neovim -y #might need to edit kitty config to make it default
 
+# grub theme
+git clone https://github.com/catppuccin/grub.git
+cd grub
+sudo mkdir -p /usr/share/grub/themes
+sudo cp -r src/catppuccin-mocha-grub-theme /usr/share/grub/themes/
+sudo nvim /etc/default/grub
+# add line GRUB_THEME="/usr/share/grub/themes/catppuccin-mocha-grub-theme/theme.txt"
+# comment line # GRUB_TERMINAL_OUTPUT="console"
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
