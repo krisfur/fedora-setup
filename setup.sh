@@ -6,7 +6,7 @@ sudo dnf install kitty -y #and then get the catpuccin theme from https://github.
 # set as default terminal in settings
 
 # gparted
-sudo dnf isntall gparted -y
+sudo dnf install gparted -y
 
 # chrome
 # get .rpm from their website
@@ -15,16 +15,17 @@ sudo dnf isntall gparted -y
 sudo dnf install git -y
 
 # github CLI
-sudo dnf install gh
+sudo dnf install gh -y
 gh auth login #log into to github
 
 # neovim
-sudo dnf install neovim -y #might need to edit kitty config, or export EDITOR=/usr/bin/nvim in /etc/profile to make it default
+sudo dnf install neovim -y
+sudo nvim /etc/profile # add export EDITOR=/usr/bin/nvim at the end of the file
 
 # vs-code
 sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
 echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
-sudo dnf install code 
+sudo dnf install code -y
 
 # pip
 sudo dnf install python3-pip -y
@@ -58,8 +59,11 @@ nvim
 sudo dnf install fastfetch -y 
 
 # discord
-sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-sudo dnf install discord
+sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
+sudo dnf install discord -y
 
 # steam
 sudo dnf install steam -y #also requires the rpmfusion repo like discord does
+
+# GIMP
+sudo dnf install gimp -y 

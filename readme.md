@@ -21,4 +21,4 @@ Quick checklist with commands when setting up after a clean installation of Fedo
 - fastfetch
 - discord
 - steam
-- nvidia drivers
+- GIMP
