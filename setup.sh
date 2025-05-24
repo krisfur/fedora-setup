@@ -59,4 +59,4 @@ sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfre
 sudo dnf install discord
 
 # steam
-sudo dnf install steam -y
+sudo dnf install steam -y #also requires the rpmfusion repo like discord does
