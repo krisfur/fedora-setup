@@ -19,3 +19,4 @@ Quick checklist with commands when setting up after a clean installation of Fedo
 - LazyVim
 - fastfetch
 - discord
+- steam

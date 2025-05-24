@@ -57,3 +57,6 @@ sudo dnf install fastfetch -y
 # discord
 sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
 sudo dnf install discord
+
+# steam
+sudo dnf install steam -y
