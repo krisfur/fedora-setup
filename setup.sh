@@ -1,5 +1,9 @@
+# first update dnf
+dnf check-update
+
 # kitty terminal
 sudo dnf install kitty -y #and then get the catpuccin theme from https://github.com/catppuccin/kitty
+# set as default terminal in settings
 
 # git
 sudo dnf install git -y
@@ -8,13 +12,20 @@ sudo dnf install git -y
 sudo dnf install python3-pip -y
 
 # vs-code
-# works better from their website .rpm than from command line somehow
+sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
+sudo dnf install code 
 
 # chrome
 # also get .rpm from their website
 
+# discord
+sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf install discord
+
 # rust
 sudo dnf install curl gcc make -y
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # C++
 sudo dnf install gcc-c++ -y
@@ -23,7 +34,7 @@ sudo dnf install gcc-c++ -y
 sudo dnf install nodejs -y
 
 # neovim
-sudo dnf install neovim -y #might need to edit kitty config to make it default
+sudo dnf install neovim -y #might need to edit kitty config, or export EDITOR=/usr/bin/nvim in /etc/profile to make it default
 
 # grub theme
 git clone https://github.com/catppuccin/grub.git
