@@ -8,6 +8,10 @@ sudo dnf install kitty -y #and then get the catpuccin theme from https://github.
 # git
 sudo dnf install git -y
 
+# github CLI
+sudo dnf install gh
+gh auth login #log into to github
+
 # pip
 sudo dnf install python3-pip -y
 
