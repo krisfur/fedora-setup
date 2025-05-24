@@ -1,5 +1,5 @@
 # first update dnf
-dnf check-update
+sudo dnf check-update
 
 # kitty terminal
 sudo dnf install kitty -y #and then get the catpuccin theme from https://github.com/catppuccin/kitty
