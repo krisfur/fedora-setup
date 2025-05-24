@@ -54,3 +54,6 @@ sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 git clone https://github.com/LazyVim/starter ~/.config/nvim
 rm -rf ~/.config/nvim/.git
 nvim
+
+# fastfetch, for cute screenshots
+sudo dnf install fastfetch -y 
