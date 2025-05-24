@@ -5,6 +5,9 @@ dnf check-update
 sudo dnf install kitty -y #and then get the catpuccin theme from https://github.com/catppuccin/kitty
 # set as default terminal in settings
 
+# gparted
+sudo dnf isntall gparted -y
+
 # chrome
 # get .rpm from their website
 

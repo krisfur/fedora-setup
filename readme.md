@@ -6,6 +6,7 @@ Quick checklist with commands when setting up after a clean installation of Fedo
 ## General order:
 - update dnf
 - kitty terminal
+- gparted
 - google chrome
 - git
 - github CLI
