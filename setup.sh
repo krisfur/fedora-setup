@@ -49,3 +49,8 @@ sudo nvim /etc/default/grub
 # add line GRUB_THEME="/usr/share/grub/themes/catppuccin-mocha-grub-theme/theme.txt"
 # comment line # GRUB_TERMINAL_OUTPUT="console"
 sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+
+# LazyVim
+git clone https://github.com/LazyVim/starter ~/.config/nvim
+rm -rf ~/.config/nvim/.git
+nvim
