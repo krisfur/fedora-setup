@@ -32,6 +32,8 @@ sudo dnf install python3-pip -y
 
 # rust
 sudo dnf install curl gcc make -y
+sudo dnf install systemd-devel -y
+sudo dnf install alsa-lib-devel -y
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # C++
