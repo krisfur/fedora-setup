@@ -59,6 +59,7 @@ nvim
 
 # fastfetch, for cute screenshots
 sudo dnf install fastfetch -y 
+sudo nvim ~/.bashrc #add fastfetch at the end to make it run on new shell for vanity
 
 # discord
 sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
