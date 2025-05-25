@@ -24,7 +24,7 @@ sudo nvim /etc/profile # add export EDITOR=/usr/bin/nvim at the end of the file
 
 # vs-code
 sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
-echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
+echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo >/dev/null
 sudo dnf install code -y
 
 # pip
@@ -37,7 +37,7 @@ sudo dnf install alsa-lib-devel -y
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # C++
-sudo dnf install gcc-c++ -y
+sudo dnf install -y gcc-c++ cmake make tmux zeromq zeromq-devel
 
 # node-js - usally already installed tho
 sudo dnf install nodejs -y
@@ -58,7 +58,7 @@ rm -rf ~/.config/nvim/.git
 nvim
 
 # fastfetch, for cute screenshots
-sudo dnf install fastfetch -y 
+sudo dnf install fastfetch -y
 sudo nvim ~/.bashrc #add fastfetch at the end to make it run on new shell for vanity
 
 # discord
@@ -69,10 +69,11 @@ sudo dnf install discord -y
 sudo dnf install steam -y #also requires the rpmfusion repo like discord does
 
 # GIMP
-sudo dnf install gimp -y 
+sudo dnf install gimp -y
 
 # snapper - for making snapshots of your root directory
 sudo dnf install snapper -y
 sudo dnf install python3-dnf-plugin-snapper
 sudo snapper -c root create-config /
 sudo snapper create --description "Initial setup."
+
