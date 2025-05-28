@@ -37,7 +37,10 @@ sudo dnf install alsa-lib-devel -y
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # C++
-sudo dnf install -y gcc-c++ cmake make tmux zeromq zeromq-devel
+sudo dnf install -y gcc-c++ cmake make tmux zeromq zeromq-devel -y
+
+# GO
+sudo dnf install golang -y
 
 # node-js - usally already installed tho
 sudo dnf install nodejs -y
@@ -76,4 +79,3 @@ sudo dnf install snapper -y
 sudo dnf install python3-dnf-plugin-snapper
 sudo snapper -c root create-config /
 sudo snapper create --description "Initial setup."
-

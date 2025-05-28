@@ -15,6 +15,7 @@ Quick checklist with commands when setting up after a clean installation of Fedo
 - pip
 - rust
 - C++
+- GO
 - node-js
 - grub theme
 - LazyVim
