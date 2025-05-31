@@ -74,6 +74,9 @@ sudo dnf install steam -y #also requires the rpmfusion repo like discord does
 # GIMP
 sudo dnf install gimp -y
 
+# Xournal++
+sudo dnf install xournalpp -y
+
 # snapper - for making snapshots of your root directory
 sudo dnf install snapper -y
 sudo dnf install python3-dnf-plugin-snapper

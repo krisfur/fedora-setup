@@ -23,4 +23,5 @@ Quick checklist with commands when setting up after a clean installation of Fedo
 - discord
 - steam
 - GIMP
+- Xournal++
 - snapper
