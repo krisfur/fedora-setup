@@ -25,3 +25,5 @@ Quick checklist with commands when setting up after a clean installation of Fedo
 - GIMP
 - Xournal++
 - snapper
+- nvidia drivers
+- asus laptop drivers

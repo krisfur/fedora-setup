@@ -82,3 +82,20 @@ sudo dnf install snapper -y
 sudo dnf install python3-dnf-plugin-snapper
 sudo snapper -c root create-config /
 sudo snapper create --description "Initial setup."
+
+# Nvidia drivers - RISKY!
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
+sudo dnf update -y
+sudo dnf install kernel-devel -y
+sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda -y
+sleep 5m # need to wait for processes in the background to finish
+sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service nvidia-powerd.service
+sudo reboot
+
+# asus drivers for laptops
+sudo dnf copr enable lukenukem/asus-linux -y
+sudo dnf update
+sudo dnf install asusctl supergfxctl -y
+sudo dnf update --refresh
+sudo systemctl enable supergfxd.service
+sudo dnf install asusctl-rog-gui -y
