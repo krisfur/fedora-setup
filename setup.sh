@@ -41,6 +41,8 @@ sudo dnf install -y gcc-c++ cmake make tmux zeromq zeromq-devel raylib -y
 
 # GO
 sudo dnf install golang -y
+#add to path
+nvim ~/.bashrc #add export PATH="$PATH:~/go/bin"
 
 # node-js - usally already installed tho
 sudo dnf install nodejs -y
