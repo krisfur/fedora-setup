@@ -37,7 +37,7 @@ sudo dnf install alsa-lib-devel -y
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # C++
-sudo dnf install -y gcc-c++ cmake make tmux zeromq zeromq-devel -y
+sudo dnf install -y gcc-c++ cmake make tmux zeromq zeromq-devel raylib -y
 
 # GO
 sudo dnf install golang -y
