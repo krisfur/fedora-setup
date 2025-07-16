@@ -8,7 +8,7 @@ sudo dnf install kitty -y #and then get the catpuccin theme from https://github.
 # gparted
 sudo dnf install gparted -y
 
-# chrome
+# chrome, or use firefox
 # get .rpm from their website
 
 # git
@@ -70,7 +70,7 @@ git clone https://github.com/LazyVim/starter ~/.config/nvim
 rm -rf ~/.config/nvim/.git
 nvim
 
-# fastfetch, for cute screenshots
+# fastfetch, for cute screenshots -preinstalled on Nobara
 sudo dnf install fastfetch -y
 sudo nvim ~/.bashrc #add fastfetch at the end to make it run on new shell for vanity
 
@@ -78,7 +78,7 @@ sudo nvim ~/.bashrc #add fastfetch at the end to make it run on new shell for va
 sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
 sudo dnf install discord -y
 
-# steam
+# steam -preinstalled on Nobara
 sudo dnf install steam -y #also requires the rpmfusion repo like discord does
 
 # GIMP
@@ -87,13 +87,13 @@ sudo dnf install gimp -y
 # Xournal++
 sudo dnf install xournalpp -y
 
-# snapper - for making snapshots of your root directory
+# snapper - for making snapshots of your root directory - optional, needs btrfs filesystem
 sudo dnf install snapper -y
 sudo dnf install python3-dnf-plugin-snapper
 sudo snapper -c root create-config /
 sudo snapper create --description "Initial setup."
 
-# Nvidia drivers - RISKY!
+# Nvidia drivers - RISKY! - Not needed on Nobara!
 sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm -y
 sudo dnf update -y
 sudo dnf install kernel-devel -y
@@ -102,11 +102,10 @@ sleep 5m # need to wait for processes in the background to finish
 sudo systemctl enable nvidia-hibernate.service nvidia-suspend.service nvidia-resume.service nvidia-powerd.service
 sudo reboot
 
-# asus drivers for laptops
+# asus drivers for laptops - not needed on Nobara!
 sudo dnf copr enable lukenukem/asus-linux -y
 sudo dnf update
 sudo dnf install asusctl supergfxctl -y
 sudo dnf update --refresh
 sudo systemctl enable supergfxd.service
 sudo dnf install asusctl-rog-gui -y
-
