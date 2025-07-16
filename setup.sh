@@ -55,6 +55,16 @@ sudo nvim /etc/default/grub
 # comment line # GRUB_TERMINAL_OUTPUT="console"
 sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 
+# Nerd Fonts
+mkdir -p ~/.local/share/fonts
+cd ~/.local/share/fonts
+wget https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip
+unzip JetBrainsMono.zip
+fc-cache -fv
+#add to kitty
+sudo nvim ~/.config/kitty/kitty.conf # or ctrl+shift+F2
+#add: font_family JetBrainsMono Nerd Font
+
 # LazyVim
 git clone https://github.com/LazyVim/starter ~/.config/nvim
 rm -rf ~/.config/nvim/.git
@@ -99,3 +109,4 @@ sudo dnf install asusctl supergfxctl -y
 sudo dnf update --refresh
 sudo systemctl enable supergfxd.service
 sudo dnf install asusctl-rog-gui -y
+
