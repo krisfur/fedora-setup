@@ -1,3 +1,8 @@
+# set keyboard backlight to max brightness
+cat /sys/class/leds/asus::kbd_backlight/max_brightness
+#will say number like 3
+sudo sh -c "echo 3 > /sys/class/leds/asus::kbd_backlight/brightness"
+
 # first update dnf
 sudo dnf check-update
 
