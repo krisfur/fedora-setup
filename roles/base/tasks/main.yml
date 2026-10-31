@@ -79,6 +79,15 @@
     enabled: true
     state: started
 
+# systemd reports firewalld started before it has loaded its config.
+- name: Wait for firewalld
+  ansible.builtin.command: firewall-cmd --state
+  register: base_firewalld_state
+  until: base_firewalld_state.rc == 0
+  retries: 15
+  delay: 1
+  changed_when: false
+
 - name: Open firewall ports
   ansible.posix.firewalld:
     port: "{{ item }}"
@@ -161,7 +170,7 @@
 # `snapper undochange <pre>..<post>`; boot breakage falls back to an older
 # kernel in the GRUB menu.
 - name: Set up snapper
-  when: (ansible_mounts | selectattr('mount', 'eq', '/') | first).fstype == 'btrfs'
+  when: (ansible_facts.mounts | selectattr('mount', 'eq', '/') | first).fstype == 'btrfs'
   block:
     - name: Install snapper and the dnf5 actions plugin
       ansible.builtin.dnf:

@@ -43,6 +43,12 @@
     dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
     mode: "0644"
 
+- name: Create cache directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.cache"
+    state: directory
+    mode: "0700"
+
 - name: Download fonts and cursor
   ansible.builtin.get_url:
     url: "{{ item.url }}"

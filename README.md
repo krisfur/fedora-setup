@@ -62,8 +62,10 @@ Anything installed with `dnf` by hand is not tracked here, so compare `dnf repoq
 On btrfs, snapper snapshots `/` before and after every dnf transaction (10 kept, no hourly timeline). `/home` is a separate subvolume and is never rolled back.
 
 ```sh
-snapper list                     # find the pre/post pair
-sudo snapper undochange 41..42   # revert that transaction's file changes
+snapper list                    # find the transaction's pre snapshot
+sudo snapper undochange 41..0   # revert / to that snapshot
 ```
+
+Use `<pre>..0`, not `<pre>..<post>`: the rpm database is flushed after the post snapshot, so a pre..post undo restores files but leaves rpm thinking the package is still installed. `..0` also reverts any later changes to `/`, so use it for the most recent transaction.
 
 Booting into a snapshot is not set up; if an update breaks boot, pick the previous kernel in the GRUB menu.
