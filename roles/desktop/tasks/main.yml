@@ -32,7 +32,11 @@
       - pipewire-alsa
       - pipewire-jack-audio-connection-kit
       - wireplumber
+      # pw-dump for sway/idle.sh's busy check.
+      - pipewire-utils
       - rtkit
+      # PipeWire's LV2 host; without it the filter-chain fails to load.
+      - pipewire-module-filter-chain-lv2
       - lsp-plugins-lv2
       - lv2-calf-plugins
       # Portals.
