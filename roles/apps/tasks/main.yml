@@ -1,0 +1,53 @@
+# Fedora's ffmpeg-free and mesa omit patented codecs, which costs H.264/HEVC
+# hardware decode. allowerasing swaps the -free builds for RPM Fusion's.
+- name: Install full codecs
+  ansible.builtin.dnf:
+    name:
+      - ffmpeg
+      - mesa-va-drivers-freeworld
+    allowerasing: true
+    state: present
+
+- name: Install applications
+  ansible.builtin.dnf:
+    name:
+      - helium-bin
+      - ghostty
+      # glib checks xdg-terminal-exec before its hardcoded terminal list;
+      # ghostty is selected via ~/.config/xdg-terminals.list.
+      - xdg-terminal-exec
+      - network-manager-applet
+      - discord
+      - mpv
+      - imv
+      - gimp
+      - transmission-gtk
+      - btop
+      - xarchiver
+      - fastfetch
+      - steam
+      - gamescope
+      - mangohud
+      - dolphin-emu
+      - libmtp
+      - android-tools
+      # FUSE 2 and 3 runtimes for the AppImages in roles/user.
+      - fuse
+      - fuse-libs
+      - fuse3
+    state: present
+
+- name: Install Proton Authenticator
+  ansible.builtin.import_tasks: proton-authenticator.yml
+  tags: upstream
+
+- name: Install controller udev rules
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/udev/rules.d/{{ item }}"
+    mode: "0644"
+  loop:
+    - 51-dolphin.rules
+    - 70-corsair-uaccess.rules
+    - 99-corsair-xpad.rules
+  notify: Reload udev

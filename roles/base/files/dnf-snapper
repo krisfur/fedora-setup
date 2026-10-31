@@ -1,0 +1,16 @@
+#!/bin/sh
+# dnf5 actions hook: pre/post snapper snapshots of / around each transaction.
+# Always prints the tmp variable so the post hook gets a defined, maybe empty, value.
+case "$1" in
+  pre)
+    cmd=$(ps -o args= -p "$2" 2>/dev/null)
+    num=$(snapper --config root create --type pre --cleanup-algorithm number \
+      --print-number --description "${cmd:-dnf}" 2>/dev/null) || num=
+    echo "tmp.snapper_pre=$num"
+    ;;
+  post)
+    [ -n "$2" ] || exit 0
+    snapper --config root create --type post --pre-number "$2" \
+      --cleanup-algorithm number --description dnf
+    ;;
+esac

@@ -1,0 +1,83 @@
+- name: Look up latest AppImage releases
+  ansible.builtin.uri:
+    url: "https://api.github.com/repos/{{ item.repo }}/releases/latest"
+  register: user_appimage_releases
+  loop: "{{ user_appimages }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create AppImage directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/Applications"
+    state: directory
+    mode: "0755"
+
+- name: Download AppImages
+  ansible.builtin.get_url:
+    url: "{{ asset.browser_download_url }}"
+    dest: "{{ user_home }}/Applications/{{ item.item.name }}.AppImage"
+    checksum: "{{ asset.digest }}"
+    mode: "0755"
+  vars:
+    asset: "{{ item.json.assets | selectattr('name', 'search', item.item.asset) | first }}"
+  loop: "{{ user_appimage_releases.results }}"
+  loop_control:
+    label: "{{ item.item.name }} {{ item.json.tag_name }}"
+
+- name: Write AppImage desktop entries
+  ansible.builtin.template:
+    src: appimage.desktop.j2
+    dest: "{{ user_home }}/.local/share/applications/{{ item.name | lower }}.desktop"
+    mode: "0644"
+  loop: "{{ user_appimages }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# Each release gets its own directory so games pinned to one keep working.
+- name: Look up latest GE-Proton release
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest
+  register: user_ge_release
+
+- name: Select GE-Proton archive
+  ansible.builtin.set_fact:
+    user_ge_tarball: "{{ user_ge_release.json.assets | selectattr('name', 'search', 'x86_64\\.tar\\.gz$') | first }}"
+
+# The archive unpacks to a directory named after itself.
+- name: Check for installed GE-Proton
+  ansible.builtin.stat:
+    path: "{{ user_compat_dir }}/{{ user_ge_tarball.name | regex_replace('\\.tar\\.gz$', '') }}"
+  register: user_ge_installed
+
+- name: Install GE-Proton
+  when: not user_ge_installed.stat.exists
+  block:
+    - name: Fetch GE-Proton checksum
+      ansible.builtin.uri:
+        url: "{{ (user_ge_release.json.assets | selectattr('name', 'search', 'x86_64\\.sha512sum$') | first).browser_download_url }}"
+        return_content: true
+      register: user_ge_sum
+
+    - name: Download GE-Proton
+      ansible.builtin.get_url:
+        url: "{{ user_ge_tarball.browser_download_url }}"
+        dest: "{{ user_home }}/.cache/{{ user_ge_tarball.name }}"
+        checksum: "sha512:{{ (user_ge_sum.content.splitlines() | select('search', user_ge_tarball.name) | first).split()[0] }}"
+        mode: "0644"
+
+    - name: Create Steam compatibility tools directory
+      ansible.builtin.file:
+        path: "{{ user_compat_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Extract GE-Proton
+      ansible.builtin.unarchive:
+        src: "{{ user_home }}/.cache/{{ user_ge_tarball.name }}"
+        dest: "{{ user_compat_dir }}"
+        remote_src: true
+
+    - name: Remove GE-Proton archive
+      ansible.builtin.file:
+        path: "{{ user_home }}/.cache/{{ user_ge_tarball.name }}"
+        state: absent

@@ -1,0 +1,9 @@
+# Match on type=Mains rather than the device name so this survives the adapter
+# enumerating under a different name. --no-block because udev RUN handlers
+# must not wait on other services.
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", RUN+="/usr/bin/systemctl start --no-block power-profile-on-ac.service"
+
+# Runtime PM defaults to off on every PCI device and ppd never sets it. "auto"
+# lets drivers drop to D3 when idle, which also parks the unused Realtek NIC;
+# it resumes on carrier.
+ACTION=="add", SUBSYSTEM=="pci", ATTR{power/control}="auto"

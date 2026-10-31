@@ -1,0 +1,65 @@
+# Templated so the wallpaper path is absolute. Colours mirror the waybar pills
+# in home/.config/waybar/style.css.
+
+background {
+    monitor =
+    path = {{ user_home }}/.config/sway/wallpaper.jpg
+    blur_passes = 3
+    blur_size = 7
+}
+
+label {
+    monitor =
+    # Polled far faster than a clock needs: this timer is the only thing
+    # repainting the input field, which re-evaluates its placeholder only
+    # on redraw, so it sets how fast the fingerprint icon appears.
+    text = cmd[update:500] date +"%H:%M"
+    color = rgb(f2e8d5)
+    font_size = 72
+    font_family = JetBrainsMono Nerd Font
+    position = 0, 150
+    halign = center
+    valign = center
+}
+
+label {
+    monitor =
+    text = cmd[update:30000] date +"%A, %e %B"
+    color = rgb(ddd0ba)
+    font_size = 16
+    font_family = JetBrainsMono Nerd Font
+    position = 0, 80
+    halign = center
+    valign = center
+}
+
+input-field {
+    monitor =
+    size = 200, 50
+    rounding = 12
+    outline_thickness = 1
+    inner_color = rgb(2b2520)
+    outer_color = rgb(574c40)
+    check_color = rgb(c9a06b)
+    fail_color = rgb(b0574a)
+    font_color = rgb(f2e8d5)
+    font_family = JetBrainsMono Nerd Font
+    dots_size = 0.25
+    dots_spacing = 0.3
+    dots_rounding = -1
+    # Static, not $FPRINTPROMPT: that variable also carries hyprlock's
+    # retry prose, which rendered at 24pt and shoved the layout around
+    # after any failed scan.
+    placeholder_text = <span size="24pt"> 󰌾 <span alpha="60%">/</span> 󰈷 </span>
+    fail_text = <i>$FAIL</i>
+    fade_on_empty = false
+}
+
+auth {
+    fingerprint {
+        enabled = true
+        # Wiki-undocumented (hyprlock#625). The 250ms default burns every
+        # retry before the reader is back from a long suspend.
+        retry_delay = 2000
+    }
+}

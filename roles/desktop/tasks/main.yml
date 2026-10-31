@@ -1,0 +1,119 @@
+- name: Install desktop packages
+  ansible.builtin.dnf:
+    name:
+      # Compositor and session.
+      - sway
+      - waybar
+      - fuzzel
+      - SwayNotificationCenter
+      - swayidle
+      - swaybg
+      - grim
+      - slurp
+      - wl-clipboard
+      - brightnessctl
+      - playerctl
+      - pavucontrol
+      - mate-polkit
+      - libnotify
+      - xdg-utils
+      - hyprlock
+      - greetd
+      - tuigreet
+      - qt6-qtwayland
+      # Theme and icons referenced by the user configs.
+      - adw-gtk3-theme
+      - papirus-icon-theme
+      - google-noto-sans-fonts
+      - google-noto-color-emoji-fonts
+      # Audio, plus the LV2 plugins for the speaker DSP filter-chain.
+      - pipewire
+      - pipewire-pulseaudio
+      - pipewire-alsa
+      - pipewire-jack-audio-connection-kit
+      - wireplumber
+      - rtkit
+      - lsp-plugins-lv2
+      - lv2-calf-plugins
+      # Portals.
+      - xdg-desktop-portal-wlr
+      - xdg-desktop-portal-gtk
+      # Fingerprint, keyring, theming backends.
+      - fprintd
+      - fprintd-pam
+      - gnome-keyring
+      - gnome-keyring-pam
+      - dconf
+      # Thunar. Open Terminal Here shells out to `exo-open --launch
+      # TerminalEmulator`, which needs exo and xfce4-mime-helper
+      # (xfce4-settings), or the menu entries fail silently.
+      - Thunar
+      - xfconf
+      - exo
+      - xfce4-settings
+      - gvfs
+      - gvfs-mtp
+      - tumbler
+    state: present
+
+- name: Install sway session script
+  ansible.builtin.copy:
+    src: sway-session
+    dest: /usr/local/bin/sway-session
+    mode: "0755"
+
+- name: Configure greetd
+  ansible.builtin.copy:
+    src: greetd.toml
+    dest: /etc/greetd/config.toml
+    mode: "0644"
+
+- name: Enable greetd
+  ansible.builtin.systemd_service:
+    name: greetd
+    enabled: true
+
+- name: Create portal config directory
+  ansible.builtin.file:
+    path: /etc/xdg/xdg-desktop-portal
+    state: directory
+    mode: "0755"
+
+- name: Configure portals
+  ansible.builtin.copy:
+    src: sway-portals.conf
+    dest: /etc/xdg/xdg-desktop-portal/sway-portals.conf
+    mode: "0644"
+
+- name: Create fprintd drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/fprintd.service.d
+    state: directory
+    mode: "0755"
+
+- name: Keep fprintd resident
+  ansible.builtin.copy:
+    src: fprintd-no-timeout.conf
+    dest: /etc/systemd/system/fprintd.service.d/no-timeout.conf
+    mode: "0644"
+  notify: Reload systemd
+
+# Fingerprint for sudo only. authselect's with-fingerprint would also reach
+# greetd via system-auth, and fprintd isn't reliably up that early in boot.
+# hyprlock ships its own PAM file and drives fprintd over D-Bus itself.
+- name: Allow fingerprint for sudo
+  community.general.pamd:
+    name: sudo
+    type: auth
+    control: include
+    module_path: system-auth
+    new_type: auth
+    new_control: sufficient
+    new_module_path: pam_fprintd.so
+    state: before
+
+- name: Let the user restart fprintd after unlock
+  ansible.builtin.template:
+    src: 50-fprintd-restart.rules.j2
+    dest: /etc/polkit-1/rules.d/50-fprintd-restart.rules
+    mode: "0644"

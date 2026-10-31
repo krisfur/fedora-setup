@@ -1,0 +1,8 @@
+#!/bin/sh
+# Shadows /usr/bin/helium (the COPR package) to add hardware video decode.
+# Chromium disables VA-API on Linux; the flag was renamed around Chromium 131,
+# so pass both names (unknown ones are ignored). Verify in about:gpu ->
+# "Video Acceleration Information": empty means CPU decode.
+exec /usr/bin/helium \
+  --enable-features=AcceleratedVideoDecodeLinuxGL,AcceleratedVideoDecodeLinuxZeroCopyGL,VaapiVideoDecodeLinuxGL,VaapiIgnoreDriverChecks \
+  "$@"

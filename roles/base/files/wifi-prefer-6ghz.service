@@ -1,0 +1,11 @@
+[Unit]
+Description=Rank saved wifi profiles seen on 6 GHz above the rest
+After=NetworkManager.service suspend.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=120s
+ExecStart=/usr/local/libexec/wifi-prefer-6ghz
+
+[Install]
+WantedBy=multi-user.target suspend.target

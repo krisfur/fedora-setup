@@ -1,0 +1,17 @@
+# Performance on AC, power-saver on battery. Runs once at boot, then via the
+# udev rule in 90-power.rules on plug/unplug. Manual overrides (waybar's
+# cycler) stick until the next plug/unplug event.
+# Must hang off graphical.target, not multi-user.target: ppd has
+# After=multi-user.target, so a multi-user-wanted unit that waits on ppd
+# deadlocks boot until the 25s D-Bus timeout.
+[Unit]
+Description=Set power profile based on AC state
+After=power-profiles-daemon.service
+Wants=power-profiles-daemon.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'if [ "$(cat /sys/class/power_supply/AC/online)" = 1 ]; then exec powerprofilesctl set performance; else exec powerprofilesctl set power-saver; fi'
+
+[Install]
+WantedBy=graphical.target

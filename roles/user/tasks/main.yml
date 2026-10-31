@@ -1,0 +1,159 @@
+# Everything under home/ is symlinked into $HOME (stow-style), so edits to the
+# live files land in this repo. An existing real file at a target fails the
+# run rather than being overwritten.
+- name: Create config directories
+  ansible.builtin.file:
+    path: "{{ user_home }}/{{ item.path }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ lookup('community.general.filetree', playbook_dir + '/home', wantlist=True) | selectattr('state', 'eq', 'directory') }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Link config files
+  ansible.builtin.file:
+    src: "{{ item.src }}"
+    dest: "{{ user_home }}/{{ item.path }}"
+    state: link
+  loop: "{{ lookup('community.general.filetree', playbook_dir + '/home', wantlist=True) | selectattr('state', 'eq', 'file') }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Create hyprlock config directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/hypr"
+    state: directory
+    mode: "0755"
+
+- name: Write hyprlock config
+  ansible.builtin.template:
+    src: hyprlock.conf.j2
+    dest: "{{ user_home }}/.config/hypr/hyprlock.conf"
+    mode: "0644"
+
+- name: Create xfconf directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml"
+    state: directory
+    mode: "0755"
+
+- name: Pin xsettings for Thunar
+  ansible.builtin.copy:
+    src: xsettings.xml
+    dest: "{{ user_home }}/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml"
+    mode: "0644"
+
+- name: Download fonts and cursor
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ user_home }}/.cache/{{ item.url | basename }}"
+    checksum: "sha256:{{ item.sha256 }}"
+    mode: "0644"
+  loop:
+    - url: "https://github.com/ryanoasis/nerd-fonts/releases/download/{{ nerd_fonts_version }}/JetBrainsMono.tar.xz"
+      sha256: "{{ nerd_fonts_sha256 }}"
+    - url: "https://github.com/ful1e5/Bibata_Cursor/releases/download/{{ bibata_version }}/Bibata-Modern-Classic.tar.xz"
+      sha256: "{{ bibata_sha256 }}"
+  loop_control:
+    label: "{{ item.url | basename }}"
+
+- name: Create font and icon directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ user_home }}/.local/share/fonts/JetBrainsMonoNerdFont"
+    - "{{ user_home }}/.local/share/icons"
+
+# A version bump needs the old directory removed first, as `creates` skips it.
+- name: Extract Nerd Font
+  ansible.builtin.unarchive:
+    src: "{{ user_home }}/.cache/JetBrainsMono.tar.xz"
+    dest: "{{ user_home }}/.local/share/fonts/JetBrainsMonoNerdFont"
+    creates: "{{ user_home }}/.local/share/fonts/JetBrainsMonoNerdFont/JetBrainsMonoNerdFont-Regular.ttf"
+    remote_src: true
+  notify: Refresh font cache
+
+- name: Extract cursor theme
+  ansible.builtin.unarchive:
+    src: "{{ user_home }}/.cache/Bibata-Modern-Classic.tar.xz"
+    dest: "{{ user_home }}/.local/share/icons"
+    creates: "{{ user_home }}/.local/share/icons/Bibata-Modern-Classic/index.theme"
+    remote_src: true
+
+# Re-run after papirus-icon-theme updates to pick up new folder icons.
+- name: Recolour Papirus folders
+  ansible.builtin.script:
+    cmd: >-
+      papirus-recolour.py /usr/share/icons/Papirus-Dark
+      {{ user_home }}/.local/share/icons/Papirus-Dark-Palebrown
+      Papirus-Dark-Palebrown palebrown
+    executable: /usr/bin/python3
+  register: user_papirus
+  changed_when: "'changed' in user_papirus.stdout"
+
+- name: Set GNOME interface settings
+  community.general.dconf:
+    key: "/org/gnome/desktop/interface/{{ item.key }}"
+    value: "{{ item.value }}"
+  loop: "{{ settings | dict2items }}"
+  vars:
+    settings:
+      color-scheme: "'prefer-dark'"
+      accent-color: "'orange'"
+      gtk-theme: "'adw-gtk3-dark'"
+      icon-theme: "'Papirus-Dark-Palebrown'"
+      cursor-theme: "'Bibata-Modern-Classic'"
+      cursor-size: "24"
+
+# Not linked: "open with -> set as default" writes through GIO to this file.
+- name: Read default browser
+  ansible.builtin.command: "xdg-mime query default {{ item }}"
+  register: user_mime_defaults
+  changed_when: false
+  loop: [text/html, x-scheme-handler/http, x-scheme-handler/https]
+
+- name: Set Helium as default browser
+  ansible.builtin.command: "xdg-mime default helium.desktop {{ item.item }}"
+  changed_when: true
+  when: item.stdout != 'helium.desktop'
+  loop: "{{ user_mime_defaults.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+# Native install keeps Claude Code writable for its own updates.
+- name: Install Claude Code
+  ansible.builtin.shell: set -o pipefail && curl -fsSL https://claude.ai/install.sh | bash
+  args:
+    creates: "{{ user_home }}/.local/bin/claude"
+    executable: /bin/bash
+
+- name: Read Claude settings
+  ansible.builtin.slurp:
+    src: "{{ user_home }}/.claude/settings.json"
+  register: user_claude_settings
+  failed_when: false
+
+# Merge the theme into writable settings, preserving other preferences.
+- name: Set Claude theme
+  ansible.builtin.copy:
+    content: "{{ (user_claude_settings.content | default('e30=') | b64decode | from_json) | combine({'theme': 'custom:dust'}) | to_nice_json(indent=2) }}\n"
+    dest: "{{ user_home }}/.claude/settings.json"
+    mode: "0600"
+
+# Not updated after the first clone, so local edits are never clobbered.
+- name: Clone Neovim config # noqa: latest[git]
+  ansible.builtin.git:
+    repo: https://github.com/krisfur/neovim-config.git
+    dest: "{{ user_home }}/.config/nvim"
+    update: false
+
+- name: Install mise tools
+  ansible.builtin.command: mise install --yes
+  register: user_mise_install
+  changed_when: "'all tools are installed' not in user_mise_install.stderr"
+
+- name: Install upstream releases
+  ansible.builtin.import_tasks: upstream.yml
+  tags: upstream

@@ -1,0 +1,11 @@
+// Don't restart fprintd on resume: it tears the daemon down under a hyprlock
+// that already holds a good claim. The reset happens after unlock instead
+// (sway-lock.sh), the only moment nothing owns the device, and this permits it
+// without a password prompt, for fprintd.service alone.
+polkit.addRule(function(action, subject) {
+  if (action.id == "org.freedesktop.systemd1.manage-units" &&
+      action.lookup("unit") == "fprintd.service" &&
+      subject.user == "{{ user }}") {
+    return polkit.Result.YES;
+  }
+});

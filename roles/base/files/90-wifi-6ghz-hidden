@@ -1,0 +1,12 @@
+#!/bin/sh
+# Mark any profile that comes up on 6 GHz as hidden so NM probes for it by
+# name. Passive scans keep missing the 6 GHz BSS (6 scans over 50s at boot on
+# 2026-10-31) while a directed probe finds it at once. Cost: the SSID goes out
+# in probe requests wherever the laptop scans. Only ever sets yes.
+[ "$2" = up ] && [ -n "$CONNECTION_UUID" ] || exit 0
+[ "$(nmcli -g connection.type connection show "$CONNECTION_UUID")" = 802-11-wireless ] || exit 0
+freq=$(nmcli -t -f IN-USE,FREQ device wifi list ifname "$1" --rescan no \
+  | awk -F: '$1 == "*" { print $2 + 0 }')
+[ "${freq:-0}" -gt 5900 ] || exit 0
+[ "$(nmcli -g 802-11-wireless.hidden connection show "$CONNECTION_UUID")" = yes ] \
+  || nmcli connection modify "$CONNECTION_UUID" 802-11-wireless.hidden yes

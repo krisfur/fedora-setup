@@ -1,0 +1,14 @@
+- name: System
+  hosts: localhost
+  become: true
+  roles:
+    - { role: repos, tags: repos }
+    - { role: base, tags: base }
+    - { role: desktop, tags: desktop }
+    - { role: dev, tags: dev }
+    - { role: apps, tags: apps }
+
+- name: User
+  hosts: localhost
+  roles:
+    - { role: user, tags: user }

@@ -1,0 +1,5 @@
+# sway never activates graphical-session.target and that target refuses manual
+# starts, so bind a session-scoped one to it (started by sway/autostart).
+[Unit]
+Description=sway compositor session
+BindsTo=graphical-session.target

@@ -1,0 +1,32 @@
+#!/bin/sh
+# sway execs this (see the `exec` line in the sway config).
+
+# D-Bus sometimes activates a second, *locked* secrets daemon before the
+# one pam_gnome_keyring unlocked claims the bus name - the intermittent
+# keyring prompt after a reboot. Re-run --start synchronously to adopt the
+# unlocked daemon and claim org.freedesktop.secrets first.
+eval "$(gnome-keyring-daemon --start --components=secrets,ssh,pkcs11)"
+export SSH_AUTH_SOCK
+dbus-update-activation-environment --systemd \
+  SSH_AUTH_SOCK GNOME_KEYRING_CONTROL DISPLAY WAYLAND_DISPLAY 2>/dev/null || true
+
+# Starts user units wanted by graphical-session.target (swaync, portals).
+# That target refuses manual starts, hence sway-session.target which BindsTo
+# it. Must run after the env push so those units see WAYLAND_DISPLAY.
+systemctl --user start sway-session.target
+
+swaybg -i "$HOME/.config/sway/wallpaper.jpg" -m fill &
+waybar &
+# swaync is deliberately absent: its own user unit is started by the
+# systemctl line above, and a second launch loses the bus-name race.
+nm-applet --indicator &
+/usr/libexec/polkit-mate-authentication-agent-1 &
+
+s="$HOME/.config/sway"
+swayidle -w \
+  timeout 900 "$s/idle.sh lock" \
+  timeout 1200 "$s/idle.sh displays" resume "$s/resume-displays.sh" \
+  timeout 1800 "$s/idle.sh suspend" \
+  before-sleep "$s/lock.sh" \
+  after-resume "$s/resume-displays.sh" \
+  lock "$s/lock.sh" &

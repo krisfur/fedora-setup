@@ -1,0 +1,3 @@
+# callback:package_filter:direction:options:command (see libdnf5-actions(8)).
+pre_transaction:::enabled=host-only:/usr/local/libexec/dnf-snapper pre ${pid}
+post_transaction:::enabled=host-only:/usr/local/libexec/dnf-snapper post ${tmp.snapper_pre}

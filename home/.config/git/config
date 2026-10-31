@@ -1,0 +1,10 @@
+[user]
+	name = Krzysztof Furman
+	email = krisfur@proton.me
+[init]
+	defaultBranch = main
+# Declarative `gh auth setup-git`, scoped to GitHub. Requires `gh auth login`.
+[credential "https://github.com"]
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = !gh auth git-credential

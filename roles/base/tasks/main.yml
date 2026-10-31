@@ -1,0 +1,217 @@
+- name: Install base packages
+  ansible.builtin.dnf:
+    name:
+      - NetworkManager-wifi
+      - iw
+      - wireless-regdb
+      - firewalld
+      - bluez
+      - power-profiles-daemon
+      - zram-generator
+      - glibc-langpack-en
+      - fish
+      - git
+      - jq
+      # community.general.dconf in the user role.
+      - python3-psutil
+    state: present
+
+# tuned-ppd provides the same D-Bus API and conflicts with ppd.
+- name: Remove tuned
+  ansible.builtin.dnf:
+    name: [tuned-ppd, tuned]
+    state: absent
+
+# quiet + loglevel=0 keep boot text off tty1, which otherwise garbles the
+# greeter. pcie_aspm.policy: firmware never enables L1.2 on the NVMe and wifi
+# links; step down to "powersave" if this causes NVMe stalls or wifi drops.
+- name: Read kernel arguments
+  ansible.builtin.command: grubby --info=DEFAULT
+  register: base_grubby_info
+  changed_when: false
+
+- name: Set kernel arguments
+  ansible.builtin.command: "grubby --update-kernel=ALL --args='{{ kernel_args | join(' ') }}'"
+  changed_when: true
+  when: kernel_args | reject('in', base_grubby_info.stdout) | list | length > 0
+  vars:
+    kernel_args: [quiet, loglevel=0, pcie_aspm.policy=powersupersave]
+
+- name: Read default systemd target
+  ansible.builtin.command: systemctl get-default
+  register: base_default_target
+  changed_when: false
+
+# A minimal install defaults to multi-user, which never starts greetd.
+- name: Boot to graphical.target
+  ansible.builtin.command: systemctl set-default graphical.target
+  changed_when: true
+  when: base_default_target.stdout != 'graphical.target'
+
+- name: Set timezone
+  community.general.timezone:
+    name: Europe/London
+
+- name: Read locale settings
+  ansible.builtin.command: localectl status
+  register: base_localectl
+  changed_when: false
+
+- name: Set locale
+  ansible.builtin.command: localectl set-locale LANG=en_GB.UTF-8
+  changed_when: true
+  when: "'LANG=en_GB.UTF-8' not in base_localectl.stdout"
+
+- name: Set console keymap
+  ansible.builtin.command: localectl set-keymap uk
+  changed_when: true
+  when: "'VC Keymap: uk' not in base_localectl.stdout"
+
+- name: Pin the wifi regulatory domain
+  ansible.builtin.copy:
+    src: cfg80211-regdom.conf
+    dest: /etc/modprobe.d/cfg80211-regdom.conf
+    mode: "0644"
+
+- name: Enable firewalld
+  ansible.builtin.systemd_service:
+    name: firewalld
+    enabled: true
+    state: started
+
+- name: Open firewall ports
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop:
+    - 53317/tcp # localsend
+    - 53317/udp # localsend
+    - 3658/udp # RPCS3 / RPCN peer-to-peer netplay
+
+# Nothing pairs automatically, so leave the radio off until asked for.
+- name: Keep bluetooth powered off at boot
+  community.general.ini_file:
+    path: /etc/bluetooth/main.conf
+    section: Policy
+    option: AutoEnable
+    value: "false"
+    no_extra_spaces: true
+    mode: "0644"
+
+- name: Enable bluetooth
+  ansible.builtin.systemd_service:
+    name: bluetooth
+    enabled: true
+
+- name: Create ppd drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/power-profiles-daemon.service.d
+    state: directory
+    mode: "0755"
+
+- name: Install power units and udev rules
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop:
+    - { src: ppd-actions.conf, dest: /etc/systemd/system/power-profiles-daemon.service.d/actions.conf }
+    - { src: power-profile-on-ac.service, dest: /etc/systemd/system/power-profile-on-ac.service }
+    - { src: 90-power.rules, dest: /etc/udev/rules.d/90-power.rules }
+  notify: [Reload systemd, Reload udev]
+
+- name: Install wifi config and scripts
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop:
+    - { src: nm-local.conf, dest: /etc/NetworkManager/conf.d/50-local.conf }
+    - { src: wifi-prefer-6ghz, dest: /usr/local/libexec/wifi-prefer-6ghz, mode: "0755" }
+    - { src: wifi-prefer-6ghz.service, dest: /etc/systemd/system/wifi-prefer-6ghz.service }
+    - { src: 90-wifi-6ghz-hidden, dest: /etc/NetworkManager/dispatcher.d/90-wifi-6ghz-hidden, mode: "0755" }
+  notify: Reload systemd
+
+- name: Install zram and sysctl config
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - { src: zram-generator.conf, dest: /etc/systemd/zram-generator.conf }
+    - { src: 90-local.conf, dest: /etc/sysctl.d/90-local.conf }
+  notify: Apply sysctl
+
+- name: Flush handlers before enabling units
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable system units
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+  loop:
+    - power-profiles-daemon.service
+    - power-profile-on-ac.service
+    - wifi-prefer-6ghz.service
+
+# Snapshots of / around every dnf transaction; /home is a separate subvolume
+# and is never rolled back. Undo a bad transaction with
+# `snapper undochange <pre>..<post>`; boot breakage falls back to an older
+# kernel in the GRUB menu.
+- name: Set up snapper
+  when: (ansible_mounts | selectattr('mount', 'eq', '/') | first).fstype == 'btrfs'
+  block:
+    - name: Install snapper and the dnf5 actions plugin
+      ansible.builtin.dnf:
+        name: [snapper, libdnf5-plugin-actions]
+        state: present
+
+    - name: Create snapper config for /
+      ansible.builtin.command: snapper --config root create-config /
+      args:
+        creates: /etc/snapper/configs/root
+
+    # Only transaction snapshots: no hourly timeline, and a small cap.
+    - name: Tune snapper retention
+      ansible.builtin.lineinfile:
+        path: /etc/snapper/configs/root
+        regexp: "^{{ item.key }}="
+        line: '{{ item.key }}="{{ item.value }}"'
+      loop: "{{ settings | dict2items }}"
+      vars:
+        settings:
+          TIMELINE_CREATE: "no"
+          NUMBER_LIMIT: "10"
+          NUMBER_LIMIT_IMPORTANT: "5"
+
+    - name: Enable snapper cleanup
+      ansible.builtin.systemd_service:
+        name: snapper-cleanup.timer
+        enabled: true
+
+    - name: Enable the dnf5 actions plugin
+      community.general.ini_file:
+        path: /etc/dnf/libdnf5-plugins/actions.conf
+        section: main
+        option: enabled
+        value: "1"
+        no_extra_spaces: true
+        mode: "0644"
+
+    - name: Install dnf snapshot hook
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "{{ item.mode }}"
+      loop:
+        - { src: dnf-snapper, dest: /usr/local/libexec/dnf-snapper, mode: "0755" }
+        - { src: snapper.actions, dest: /etc/dnf/libdnf5-plugins/actions.d/snapper.actions, mode: "0644" }
+
+- name: Configure user
+  ansible.builtin.user:
+    name: "{{ user }}"
+    groups: [wheel, video, input]
+    append: true
+    shell: /usr/bin/fish

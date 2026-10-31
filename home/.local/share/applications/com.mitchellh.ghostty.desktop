@@ -1,0 +1,16 @@
+# Shadows the stock entry, keeping its X-TerminalArg* keys. Single-instance
+# lives in ghostty/config, so every launch path agrees - except the Thunar
+# helper, which overrides it to keep its working directory.
+[Desktop Entry]
+Type=Application
+Name=Ghostty
+GenericName=Terminal Emulator
+Exec=ghostty
+Icon=com.mitchellh.ghostty
+Categories=System;TerminalEmulator;
+Terminal=false
+X-TerminalArgExec=-e
+X-TerminalArgTitle=--title=
+X-TerminalArgAppId=--class=
+X-TerminalArgDir=--working-directory=
+X-TerminalArgHold=--wait-after-command

@@ -1,0 +1,22 @@
+/* GTK3 has no accent-color setting, so adw-gtk3's blue selection shows
+   through on GTK3 menus (nm-applet). Override the named colours instead. */
+@define-color theme_selected_bg_color #c9a06b;
+@define-color theme_selected_fg_color #1e1a16;
+@define-color accent_bg_color #c9a06b;
+@define-color accent_fg_color #1e1a16;
+@define-color accent_color #c9a06b;
+
+/* adw-gtk3's menu greys are neutral, which reads cold next to the warm
+   palette everywhere else. Restyle directly - the @define-colors above
+   don't reach menu backgrounds. */
+menu, .menu, .context-menu, popover, popover.background,
+popover > contents, .csd popup decoration {
+  background-color: #2b2520;
+  color: #ddd0ba;
+  border: 1px solid #574c40;
+}
+menu menuitem:hover, .menu menuitem:hover,
+popover listview row:selected, popover modelbutton:hover {
+  background-color: #c9a06b;
+  color: #1e1a16;
+}

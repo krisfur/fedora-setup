@@ -1,0 +1,16 @@
+# Apps with no Fedora or COPR package. Kept at the latest release on each run,
+# verified against GitHub's asset digest.
+user_appimages:
+  - name: LocalSend
+    repo: localsend/localsend
+    asset: 'linux-x86-64\.AppImage$'
+    icon: localsend
+    categories: Network;FileTransfer;
+  # Also self-updates in place; RPCN needs a current build.
+  - name: RPCS3
+    repo: RPCS3/rpcs3-binaries-linux
+    asset: '_linux64\.AppImage$'
+    icon: rpcs3
+    categories: Game;Emulator;
+
+user_compat_dir: "{{ user_home }}/.local/share/Steam/compatibilitytools.d"

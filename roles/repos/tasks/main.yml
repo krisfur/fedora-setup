@@ -1,0 +1,36 @@
+# The release packages are signed by keys they themselves install, so the
+# first install is trust-on-first-use over HTTPS.
+- name: Enable RPM Fusion
+  ansible.builtin.dnf:
+    name:
+      - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+      - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+    disable_gpg_check: true
+    state: present
+
+- name: Install the dnf copr plugin
+  ansible.builtin.dnf:
+    name: dnf5-plugins
+    state: present
+
+# includepkgs stops a COPR from replacing anything else. sdegler/hyprland also
+# ships waybar, kitty, qt6ct and more; only hyprlock and its libraries are needed.
+- name: Enable COPRs
+  ansible.builtin.command: "dnf copr enable -y {{ item.name }}"
+  args:
+    creates: "/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:{{ item.name | replace('/', ':') }}.repo"
+  loop: "{{ repos_coprs }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Restrict COPRs to the packages they are for
+  community.general.ini_file:
+    path: "/etc/yum.repos.d/_copr:copr.fedorainfracloud.org:{{ item.name | replace('/', ':') }}.repo"
+    section: "copr:copr.fedorainfracloud.org:{{ item.name | replace('/', ':') }}"
+    option: includepkgs
+    value: "{{ item.packages | join(',') }}"
+    no_extra_spaces: true
+    mode: "0644"
+  loop: "{{ repos_coprs }}"
+  loop_control:
+    label: "{{ item.name }}"

@@ -1,0 +1,24 @@
+# Dev tools Fedora doesn't package (or packages out of step, e.g. zig vs zls).
+# Everything else comes from dnf in roles/dev.
+
+[tools]
+node = "lts"
+pnpm = "latest"
+zig = "latest"
+zls = "latest"
+odin = "latest"
+ols = "latest"
+typst = "latest"
+tinymist = "latest"
+lazygit = "latest"
+lua-language-server = "latest"
+stylua = "latest"
+"npm:prettier" = "latest"
+"npm:typescript" = "latest"
+"npm:typescript-language-server" = "latest"
+"npm:vscode-langservers-extracted" = "latest"
+"github:atanunq/viu" = "latest"
+"github:bluetuith-org/bluetuith" = "latest"
+
+[settings]
+experimental = true

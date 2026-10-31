@@ -1,0 +1,78 @@
+# Fedora-packaged toolchains. Tools Fedora lacks come from mise
+# (home/.config/mise/config.toml).
+- name: Install development packages
+  ansible.builtin.dnf:
+    name:
+      # C/C++. clang-tools-extra provides clangd, clang-format and clang-tidy.
+      - gcc
+      - gcc-c++
+      - clang-tools-extra
+      - cmake
+      - ninja-build
+      - make
+      - pkgconf-pkg-config
+      - gdb
+      # Languages.
+      - golang
+      - gopls
+      - rust
+      - cargo
+      - clippy
+      - rustfmt
+      - rust-analyzer
+      - python3
+      - python3-pip
+      - uv
+      - ruff
+      - ty
+      # Editor and CLI.
+      - neovim
+      - tree-sitter-cli
+      - ripgrep
+      - fd-find
+      - fzf
+      - gh
+      - cloc
+      - unzip
+      - mise
+      # Claude Code's sandbox.
+      - bubblewrap
+      - moby-engine
+    state: present
+
+# Socket-activated: the daemon starts on first docker command rather than
+# sitting in RAM from boot (~90 MiB idle).
+- name: Enable docker socket
+  ansible.builtin.systemd_service:
+    name: docker.socket
+    enabled: true
+
+- name: Leave docker service to socket activation
+  ansible.builtin.systemd_service:
+    name: docker.service
+    enabled: false
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ user }}"
+    groups: [docker]
+    append: true
+
+# uinput access for tooling that needs it, matching hardware.uinput on NixOS.
+- name: Create uinput group
+  ansible.builtin.group:
+    name: uinput
+    system: true
+
+- name: Load uinput at boot
+  ansible.builtin.copy:
+    content: "uinput\n"
+    dest: /etc/modules-load.d/uinput.conf
+    mode: "0644"
+
+- name: Grant uinput group access
+  ansible.builtin.copy:
+    content: |
+      KERNEL=="uinput", MODE="0660", GROUP="uinput", OPTIONS+="static_node=uinput"
+    dest: /etc/udev/rules.d/99-uinput.rules
+    mode: "0644"

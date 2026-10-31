@@ -1,0 +1,11 @@
+repos_coprs:
+  # Upstream-maintained.
+  - name: imput/helium
+    packages: [helium-bin]
+  - name: jdxcode/mise
+    packages: [mise]
+  # Third-party; neither is in the Fedora repos or on Flathub.
+  - name: scottames/ghostty
+    packages: ["ghostty*", "gtk4-layer-shell*"]
+  - name: sdegler/hyprland
+    packages: ["hyprlock*", "hyprlang*", "hyprutils*", "hyprgraphics*"]

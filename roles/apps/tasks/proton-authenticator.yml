@@ -1,0 +1,33 @@
+# Proton publishes an RPM but no repository. The RPM is unsigned, so it is
+# verified against the SHA-512 in Proton's release manifest instead.
+- name: Look up latest Proton Authenticator release
+  ansible.builtin.uri:
+    url: https://proton.me/download/authenticator/linux/version.json
+  register: apps_proton_auth_manifest
+
+- name: Read installed packages
+  ansible.builtin.package_facts:
+
+- name: Update Proton Authenticator
+  when: (ansible_facts.packages['proton-authenticator'] | default([{}]) | first).version | default('') != apps_proton_auth_release.Version
+  vars:
+    apps_proton_auth_release: "{{ apps_proton_auth_manifest.json.Releases | selectattr('CategoryName', 'eq', 'Stable') | first }}"
+    apps_proton_auth_rpm: "{{ apps_proton_auth_release.File | selectattr('Url', 'search', '\\.rpm$') | first }}"
+  block:
+    - name: Download Proton Authenticator
+      ansible.builtin.get_url:
+        url: "{{ apps_proton_auth_rpm.Url }}"
+        dest: "/var/cache/{{ apps_proton_auth_rpm.Url | basename }}"
+        checksum: "sha512:{{ apps_proton_auth_rpm.Sha512CheckSum }}"
+        mode: "0644"
+
+    - name: Install Proton Authenticator RPM
+      ansible.builtin.dnf:
+        name: "/var/cache/{{ apps_proton_auth_rpm.Url | basename }}"
+        disable_gpg_check: true
+        state: present
+
+    - name: Remove Proton Authenticator RPM
+      ansible.builtin.file:
+        path: "/var/cache/{{ apps_proton_auth_rpm.Url | basename }}"
+        state: absent
