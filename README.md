@@ -6,7 +6,12 @@ Ansible playbook for a minimal Fedora install with Sway, greetd, Waybar, Ghostty
 
 ## Install
 
-1. Run `./build-iso.sh` (needs podman or docker) and flash `fedora-setup.iso` to a USB stick. Rebuild only for a new Fedora release; `ks.cfg` holds the package selection and the first-boot service.
+1. Run `./build-iso.sh` (needs podman or docker), find the USB stick with `lsblk`, and flash the ISO, replacing `/dev/sdX` with the whole stick, not a partition. This erases the target. Rebuild only for a new Fedora release; `ks.cfg` holds the package selection and the first-boot service.
+
+```sh
+sudo dd if=fedora-setup.iso of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
 2. Boot it. In the installer, connect to wifi under **Network & Host Name**, choose the disk under **Installation Destination**, and create the user `kfurman` with administrator rights. Everything else is already filled in.
 3. On first boot, a service clones this repo's default branch, applies the playbook with its progress on screen, and reboots into greetd. If it fails, for example with no network, the login prompt shows the reason; fix it and reboot to retry.
 4. Log in, sign in to your browser, and run `~/code/fedora-setup/post-install.sh`. It prompts for `gh auth login` and fingerprint enrolment, the only state that can't live in the repo (an auth token and biometric templates). Both are skipped on re-runs once done.
