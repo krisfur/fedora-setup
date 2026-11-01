@@ -4,7 +4,7 @@ After=NetworkManager.service suspend.target
 
 [Service]
 Type=oneshot
-TimeoutStartSec=120s
+TimeoutStartSec=90s
 ExecStart=/usr/local/libexec/wifi-prefer-6ghz
 
 [Install]
