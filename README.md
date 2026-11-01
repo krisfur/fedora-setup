@@ -6,24 +6,17 @@ Ansible playbook for a minimal Fedora install with Sway, greetd, Waybar, Ghostty
 
 ## Install
 
-1. Boot the Fedora Everything netinstall ISO and choose **Minimal Install**. Create the user `kfurman` with administrator rights and keep the default btrfs layout.
-2. After first boot, log in on the TTY and run:
-
-```sh
-sudo dnf install -y git
-git clone https://github.com/krisfur/fedora-setup ~/code/fedora-setup
-~/code/fedora-setup/bootstrap.sh
-```
-
-`bootstrap.sh` ends by prompting for `gh auth login` and fingerprint enrolment, the only state that can't live in the repo (an auth token and biometric templates). Both are skipped on re-runs once done.
-
-3. Reboot. greetd starts on tty1.
+1. Run `./build-iso.sh` (needs podman or docker) and flash `fedora-setup.iso` to a USB stick. Rebuild only for a new Fedora release; `ks.cfg` holds the package selection and the first-boot service.
+2. Boot it. In the installer, connect to wifi under **Network & Host Name**, choose the disk under **Installation Destination**, and create the user `kfurman` with administrator rights. Everything else is already filled in.
+3. On first boot, a service clones this repo's default branch, applies the playbook with its progress on screen, and reboots into greetd. If it fails, for example with no network, the login prompt shows the reason; fix it and reboot to retry.
+4. Log in, sign in to your browser, and run `~/code/fedora-setup/post-install.sh`. It prompts for `gh auth login` and fingerprint enrolment, the only state that can't live in the repo (an auth token and biometric templates). Both are skipped on re-runs once done.
 
 The repo must stay at the path it was cloned to: files under `home/` are symlinked into `$HOME`, so moving the checkout breaks them.
 
 ## Apply changes later
 
 ```sh
+./bootstrap.sh                             # apply, installing Ansible if needed
 ansible-playbook site.yml --check --diff   # preview
 ansible-playbook site.yml                  # apply
 ansible-playbook site.yml --tags user      # one role: repos, base, desktop, dev, apps, user
@@ -36,6 +29,9 @@ Dotfiles are symlinks, so edits under `home/` take effect without a run. Re-run 
 
 | Path | Responsibility |
 | --- | --- |
+| `ks.cfg` | Kickstart embedded in the ISO: base packages and the one-time first-boot service. |
+| `build-iso.sh` | Builds `fedora-setup.iso` from the verified netinstall ISO. |
+| `post-install.sh` | Prompts for `gh auth login` and fingerprint enrolment. |
 | `site.yml` | System play (root) and user play. |
 | `group_vars/all.yml` | Username and pinned upstream downloads. |
 | `roles/repos` | RPM Fusion and COPRs (restricted with `includepkgs`). |

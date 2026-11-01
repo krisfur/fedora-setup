@@ -2,13 +2,7 @@
 # precede installing ppd.
 - name: Remove tuned
   ansible.builtin.dnf:
-    name: [tuned-switcher, tuned-ppd, tuned]
-    state: absent
-
-# Exits with "CPU is unsupported" on AMD, leaving the system degraded.
-- name: Remove mcelog
-  ansible.builtin.dnf:
-    name: mcelog
+    name: [tuned-ppd, tuned]
     state: absent
 
 - name: Install base packages
