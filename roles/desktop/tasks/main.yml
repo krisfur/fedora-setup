@@ -72,6 +72,19 @@
     dest: /etc/greetd/config.toml
     mode: "0644"
 
+# The Sway Desktop environment enables sddm, which blocks enabling greetd
+# because both claim display-manager.service.
+- name: Remove sddm
+  ansible.builtin.dnf:
+    name: [sddm-wayland-sway, sddm]
+    state: absent
+
+# Claims the same D-Bus notification name as swaync.
+- name: Remove dunst
+  ansible.builtin.dnf:
+    name: dunst
+    state: absent
+
 - name: Enable greetd
   ansible.builtin.systemd_service:
     name: greetd

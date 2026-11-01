@@ -1,3 +1,16 @@
+# tuned-ppd provides the same D-Bus API and conflicts with ppd, so this must
+# precede installing ppd.
+- name: Remove tuned
+  ansible.builtin.dnf:
+    name: [tuned-switcher, tuned-ppd, tuned]
+    state: absent
+
+# Exits with "CPU is unsupported" on AMD, leaving the system degraded.
+- name: Remove mcelog
+  ansible.builtin.dnf:
+    name: mcelog
+    state: absent
+
 - name: Install base packages
   ansible.builtin.dnf:
     name:
@@ -15,12 +28,6 @@
       # community.general.dconf in the user role.
       - python3-psutil
     state: present
-
-# tuned-ppd provides the same D-Bus API and conflicts with ppd.
-- name: Remove tuned
-  ansible.builtin.dnf:
-    name: [tuned-ppd, tuned]
-    state: absent
 
 # quiet + loglevel=0 keep boot text off tty1, which otherwise garbles the
 # greeter. pcie_aspm.policy: firmware never enables L1.2 on the NVMe and wifi
