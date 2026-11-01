@@ -1,6 +1,8 @@
 [Unit]
 Description=Rank saved wifi profiles seen on 6 GHz above the rest
 After=NetworkManager.service suspend.target
+# Works around ath11k's slow return of 6 GHz; other drivers don't need it.
+ConditionPathExists=/sys/module/ath11k
 
 [Service]
 Type=oneshot

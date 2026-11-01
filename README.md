@@ -12,15 +12,16 @@ Ansible playbook for a minimal Fedora install with Sway, greetd, Waybar, Ghostty
 sudo dd if=fedora-setup.iso of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
-2. Boot it. In the installer, connect to wifi under **Network & Host Name**, choose the disk under **Installation Destination**, and create the user `kfurman` with administrator rights. Everything else is already filled in.
-3. On first boot, a service clones this repo's default branch, applies the playbook with its progress on screen, and reboots into greetd. If it fails, for example with no network, the login prompt shows the reason; fix it and reboot to retry.
-4. Log in, sign in to your browser, and run `~/code/fedora-setup/post-install.sh`. It prompts for `gh auth login` and fingerprint enrolment, the only state that can't live in the repo (an auth token and biometric templates). Both are skipped on re-runs once done.
+2. Boot it. In the installer, connect to wifi under **Network & Host Name**, choose the disk under **Installation Destination**, and create your user with administrator rights. Everything else is already filled in.
+3. On first boot, a service clones this repo's default branch to `~/.local/share/fedora-setup`, applies the playbook with its progress on screen, and reboots into greetd. If it fails, for example with no network, the login prompt shows the reason; fix it and reboot to retry.
+4. Log in, sign in to your browser, and run `~/.local/share/fedora-setup/post-install.sh`. It prompts for `gh auth login` and fingerprint enrolment, the only state that can't live in the repo (an auth token and biometric templates). Both are skipped on re-runs once done, and enrolment is skipped on machines without a supported reader.
 
 The repo must stay at the path it was cloned to: files under `home/` are symlinked into `$HOME`, so moving the checkout breaks them.
 
 ## Apply changes later
 
 ```sh
+fedora-setup-update                        # pull, apply, and upgrade packages
 ./bootstrap.sh                             # apply, installing Ansible if needed
 ansible-playbook site.yml --check --diff   # preview
 ansible-playbook site.yml                  # apply
@@ -38,7 +39,7 @@ Dotfiles are symlinks, so edits under `home/` take effect without a run. Re-run 
 | `build-iso.sh` | Builds `fedora-setup.iso` from the verified netinstall ISO. |
 | `post-install.sh` | Prompts for `gh auth login` and fingerprint enrolment. |
 | `site.yml` | System play (root) and user play. |
-| `group_vars/all.yml` | Username and pinned upstream downloads. |
+| `group_vars/all.yml` | User detection, the P14s check, and pinned upstream downloads. |
 | `roles/repos` | RPM Fusion and COPRs (restricted with `includepkgs`). |
 | `roles/base` | Kernel arguments, firewall, locale, power profiles, wifi, zram, sysctl, and snapper. |
 | `roles/desktop` | Sway session, greetd, PipeWire with speaker DSP plugins, portals, fingerprint, and Thunar. |
@@ -46,6 +47,19 @@ Dotfiles are symlinks, so edits under `home/` take effect without a run. Re-run 
 | `roles/apps` | Desktop applications, codecs, Proton Authenticator, and controller udev rules. |
 | `roles/user` | Symlinks `home/` into `$HOME`, plus fonts, cursor, folder colours, dconf, default browser, Claude Code, Neovim, mise, AppImages, and GE-Proton. |
 | `home/` | Dotfiles, mirroring `$HOME`. |
+
+## Hardware
+
+Applied only where the hardware matches, so everything else works on any machine:
+
+| Setting | Applies to | Detected by |
+| --- | --- | --- |
+| Speaker DSP and `pcie_aspm.policy=powersupersave` | ThinkPad P14s Gen 5 AMD | DMI product version |
+| `wifi-prefer-6ghz` and its dispatcher script | ath11k wifi | Loaded kernel module, checked at runtime |
+| `mesa-va-drivers-freeworld` | AMD GPUs | PCI vendor |
+| `intel-media-driver` | Intel GPUs, Broadwell or later | PCI vendor |
+
+Re-running the playbook removes the DSP link on other models but doesn't remove a kernel argument set by an earlier run: use `sudo grubby --update-kernel=ALL --remove-args=<argument>`.
 
 ## Package sources
 

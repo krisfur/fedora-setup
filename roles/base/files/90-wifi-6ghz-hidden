@@ -3,6 +3,7 @@
 # name. Passive scans keep missing the 6 GHz BSS (6 scans over 50s at boot on
 # 2026-10-31) while a directed probe finds it at once. Cost: the SSID goes out
 # in probe requests wherever the laptop scans. Only ever sets yes.
+[ -d /sys/module/ath11k ] || exit 0
 [ "$2" = up ] && [ -n "$CONNECTION_UUID" ] || exit 0
 [ "$(nmcli -g connection.type connection show "$CONNECTION_UUID")" = 802-11-wireless ] || exit 0
 freq=$(nmcli -t -f IN-USE,FREQ device wifi list ifname "$1" --rescan no \

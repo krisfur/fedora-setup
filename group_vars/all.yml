@@ -1,5 +1,9 @@
-user: kfurman
-user_home: "/home/{{ user }}"
+# Whoever runs the playbook, which on first boot is the account from the installer.
+user: "{{ lookup('env', 'USER') }}"
+user_home: "{{ lookup('env', 'HOME') }}"
+
+# Settings tuned and measured on this model only.
+is_p14s_gen5: "{{ ansible_facts.product_version == 'ThinkPad P14s Gen 5 AMD' }}"
 
 # Upstream downloads not packaged by Fedora, pinned by hash.
 nerd_fonts_version: v3.5.1

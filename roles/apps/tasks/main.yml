@@ -1,10 +1,18 @@
 # Fedora's ffmpeg-free and mesa omit patented codecs, which costs H.264/HEVC
 # hardware decode. allowerasing swaps the -free builds for RPM Fusion's.
+- name: Read GPU vendors
+  ansible.builtin.shell: cat /sys/class/drm/card[0-9]/device/vendor
+  register: apps_gpu_vendors
+  changed_when: false
+  failed_when: false
+
+# 0x1002 is AMD and 0x8086 is Intel. intel-media-driver needs Broadwell or later.
 - name: Install full codecs
   ansible.builtin.dnf:
-    name:
-      - ffmpeg
-      - mesa-va-drivers-freeworld
+    name: >-
+      {{ ['ffmpeg']
+      + (['mesa-va-drivers-freeworld'] if '0x1002' in apps_gpu_vendors.stdout else [])
+      + (['intel-media-driver'] if '0x8086' in apps_gpu_vendors.stdout else []) }}
     allowerasing: true
     state: present
 

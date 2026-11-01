@@ -24,8 +24,8 @@
     state: present
 
 # quiet + loglevel=0 keep boot text off tty1, which otherwise garbles the
-# greeter. pcie_aspm.policy: firmware never enables L1.2 on the NVMe and wifi
-# links; step down to "powersave" if this causes NVMe stalls or wifi drops.
+# greeter. pcie_aspm.policy: the P14s firmware never enables L1.2 on the NVMe and
+# wifi links; step down to "powersave" if this causes NVMe stalls or wifi drops.
 - name: Read kernel arguments
   ansible.builtin.command: grubby --info=DEFAULT
   register: base_grubby_info
@@ -36,7 +36,7 @@
   changed_when: true
   when: kernel_args | reject('in', base_grubby_info.stdout) | list | length > 0
   vars:
-    kernel_args: [quiet, loglevel=0, pcie_aspm.policy=powersupersave]
+    kernel_args: "{{ ['quiet', 'loglevel=0'] + (['pcie_aspm.policy=powersupersave'] if is_p14s_gen5 else []) }}"
 
 - name: Read default systemd target
   ansible.builtin.command: systemctl get-default

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Pulls this repo, applies it, and upgrades packages. Stops if the pull can't fast-forward.
+# In a function so sh has parsed all of it before the pull can replace this file.
+main() {
+  set -eu
+  repo=$(dirname "$(readlink -f "$0")")/../../..
+  repo=$(readlink -f "$repo")
+  cd "$repo"
+  git pull --ff-only
+  # Links left behind by dotfiles the pull removed.
+  find "$HOME/.config" "$HOME/.local" -xtype l -lname "$repo/home/*" -delete
+  ansible-playbook site.yml
+  sudo dnf upgrade
+}
+main "$@"

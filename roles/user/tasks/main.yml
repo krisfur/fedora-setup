@@ -19,6 +19,19 @@
   loop_control:
     label: "{{ item.path }}"
 
+- name: Create PipeWire config directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/pipewire/pipewire.conf.d"
+    state: directory
+    mode: "0755"
+
+# Tuned for this laptop's speakers, and targets their sink by PCI address.
+- name: Link speaker DSP
+  ansible.builtin.file:
+    src: "{{ (role_path + '/files/99-thinkpad-unsuck.conf') if is_p14s_gen5 else omit }}"
+    dest: "{{ user_home }}/.config/pipewire/pipewire.conf.d/99-thinkpad-unsuck.conf"
+    state: "{{ 'link' if is_p14s_gen5 else 'absent' }}"
+
 - name: Create hyprlock config directory
   ansible.builtin.file:
     path: "{{ user_home }}/.config/hypr"

@@ -1,6 +1,12 @@
 - name: System
   hosts: localhost
   become: true
+  pre_tasks:
+    - name: Refuse to run as root
+      ansible.builtin.assert:
+        that: user != 'root'
+        fail_msg: Run this as your own user, not with sudo. It would configure root instead.
+      tags: always
   roles:
     - { role: repos, tags: repos }
     - { role: base, tags: base }
